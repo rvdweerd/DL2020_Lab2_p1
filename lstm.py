@@ -25,10 +25,13 @@ class LSTM(nn.Module):
         self.seq_length = seq_length
         self.batch_size = batch_size
         self.input_dim = input_dim
+        self.hidden_dim = hidden_dim
         self.C=torch.zeros(hidden_dim)
         self.h=torch.zeros(hidden_dim)
 
         self.Wfx = nn.Parameter(torch.ones(input_dim,hidden_dim),requires_grad=True)
+        nn.init.kaiming_normal_(self.Wfx, mode='fan_out', nonlinearity='sigmoid')
+        #self.Wfx.requires_grad=True
         nn.init.kaiming_normal_(self.Wfx, mode='fan_out', nonlinearity='sigmoid')
         self.Wfh = nn.Parameter(torch.ones(hidden_dim,hidden_dim),requires_grad=True)
         nn.init.kaiming_normal_(self.Wfh, mode='fan_out', nonlinearity='sigmoid')
@@ -62,8 +65,10 @@ class LSTM(nn.Module):
     def forward(self, x):
         ########################
         # PUT YOUR CODE HERE  #
-        #######################
+        ####################### 
         for s in range(self.batch_size):
+            self.C = torch.zeros(self.hidden_dim)
+            self.h=torch.zeros(self.hidden_dim)
             for t in range(self.seq_length):
                 sig = torch.nn.Sigmoid()
                 tanh = torch.nn.Tanh()
