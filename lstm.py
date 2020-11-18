@@ -44,9 +44,9 @@ class LSTM(nn.Module):
         self.bi = nn.Parameter(torch.zeros(hidden_dim),requires_grad=True)
 
         self.Wgx = nn.Parameter(torch.ones(input_dim,hidden_dim),requires_grad=True)
-        nn.init.kaiming_normal_(self.Wgx, mode='fan_out', nonlinearity='sigmoid')
+        nn.init.kaiming_normal_(self.Wgx, mode='fan_out', nonlinearity='tanh')
         self.Wgh = nn.Parameter(torch.ones(hidden_dim,hidden_dim),requires_grad=True)
-        nn.init.kaiming_normal_(self.Wgh, mode='fan_out', nonlinearity='sigmoid')
+        nn.init.kaiming_normal_(self.Wgh, mode='fan_out', nonlinearity='tanh')
         self.bg = nn.Parameter(torch.zeros(hidden_dim),requires_grad=True)
 
         self.Wox = nn.Parameter(torch.ones(input_dim,hidden_dim),requires_grad=True)
