@@ -15,7 +15,7 @@ N_PALIN = 2#10
 seq_len = N_PALIN*4+1
 #BATCH_SIZE = 256
 N_CLASSES=1 # just binary classifier
-INPUT_DIM=3
+INPUT_DIM=max(seq_len//2,5)
 HIDDEN_DIM=256
 LEARNING_RATE=1e-4
 
@@ -34,7 +34,7 @@ bp_dataset = BinaryPalindromeDataset(N_PALIN)
 
 batch_sizes=[256]
 for BATCH_SIZE in batch_sizes:
-    writer=SummaryWriter(f'runs/LSTM/MiniBatchSize {BATCH_SIZE}')
+    writer=SummaryWriter(f'runs/LSTM/MiniBatchSize {BATCH_SIZE}/lr {LEARNING_RATE}')
     data_loader = torch.utils.data.DataLoader(bp_dataset, batch_size=BATCH_SIZE)
     lstm = LSTM(seq_len,INPUT_DIM,HIDDEN_DIM,N_CLASSES,BATCH_SIZE,device)
     lstm.to(device)

@@ -30,7 +30,7 @@ class LSTM(nn.Module):
         self.h=torch.zeros(batch_size,hidden_dim)
         self.device=device
 
-        self.embedding = torch.nn.Embedding(num_classes+2,input_dim,padding_idx=0)
+        self.embedding = torch.nn.Embedding(num_classes+1,input_dim,padding_idx=0)
 
         self.Wfx = nn.Parameter(torch.ones(input_dim,hidden_dim),requires_grad=True)
         nn.init.kaiming_normal_(self.Wfx, mode='fan_out', nonlinearity='sigmoid')
@@ -70,6 +70,7 @@ class LSTM(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
         x_in =  x.squeeze(2).type(torch.LongTensor).to(self.device)
+        #x_in =  x.type(torch.LongTensor).to(self.device)
         x=self.embedding(x_in)
         
         self.C = torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
@@ -82,7 +83,7 @@ class LSTM(nn.Module):
             g=sig(torch.matmul(x[:,t,:],self.Wgx) + torch.matmul(self.h,self.Wgh) + self.bg)
             o=sig(torch.matmul(x[:,t,:],self.Wox) + torch.matmul(self.h,self.Woh) + self.bo)
             self.C = g*i + self.C*f
-            self.C = torch.diag((x_in[:,t]>0).type(torch.FloatTensor)) @self.C # Reset state vector to zero if sequence hasn't started yet (padding symbol)
+            #self.C = torch.diag((x_in[:,t]>0).type(torch.FloatTensor)) @self.C # Reset state vector to zero if sequence hasn't started yet (padding symbol)
             self.h = o*tanh(self.C)
         y=torch.matmul(self.h,self.Wph)+self.bp
         return y.squeeze()

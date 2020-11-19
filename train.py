@@ -39,6 +39,7 @@ import numpy as np
 
 # You may want to look into tensorboardX for logging
 # from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 ###############################################################################
 
@@ -75,7 +76,7 @@ def train(config):
     elif config.dataset == 'bipalindrome':
         print('Load binary palindrome dataset ...')
         # Initialize the dataset and data loader
-        config.num_classes = config.input_length
+        #config.num_classes = config.input_length
         dataset = datasets.BinaryPalindromeDataset(config.input_length)
         data_loader = DataLoader(dataset, config.batch_size, num_workers=1,
                                  drop_last=True)
@@ -121,6 +122,9 @@ def train(config):
     loss_function = torch.nn.NLLLoss()
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
 
+    # Setup tensorboard writer
+    writer=SummaryWriter(f'runs/LSTM/MiniBatchSize {config.batch_size}/lr {config.learning_rate}')
+
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
 
         # Only for time measurement of step through network
@@ -153,6 +157,8 @@ def train(config):
         correct = (predictions == batch_targets).sum().item()
         accuracy = correct / log_probs.size(0)
 
+        writer.add_scalar('Training loss',loss,global_step=step)
+        writer.add_scalar('Accuracy',accuracy,global_step=step)
         # print(predictions[0, ...], batch_targets[0, ...])
 
         # Just for time measurement
@@ -174,7 +180,34 @@ def train(config):
             # If you receive a PyTorch data-loader error, check this bug report
             # https://github.com/pytorch/pytorch/pull/9655
             break
+    
+    # Test accuracy calculation
+    model.eval()
+    with torch.no_grad():
+        correct=0
+        total=0
+        numBatchesTestEval=5
+        test_loss=0
+        for k in range(numBatchesTestEval):
+            x,t=next(iter(data_loader))
+            if device.type=='cuda':
+                x.to(device)
+                x=x.cuda()
+                t.to(device)
+                t=t.cuda()
+            #x_e = embedding(x.squeeze(2).type(torch.LongTensor))
+            #pred=lstm(x_e)
+            log_probs=model(x)
+            predictions = torch.argmax(log_probs, dim=1)
+            correct += (predictions == batch_targets).sum().item()
+            total += log_probs.size(0)
+            test_loss += loss_function(log_probs,t)/numBatchesTestEval
+        test_accuracy=correct/total
+    model.train()
 
+
+    writer.add_hparams({'lr':config.learning_rate,'bsize':config.batch_size},{'accuracy':test_accuracy,'loss':test_loss})
+    print('Test accuracy: ',test_accuracy)
     print('Done training.')
     ###########################################################################
     ###########################################################################
@@ -186,18 +219,22 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # dataset
-    parser.add_argument('--dataset', type=str, default='randomcomb',
+    #parser.add_argument('--dataset', type=str, default='randomcomb',
+    parser.add_argument('--dataset', type=str, default='bipalindrome',
                         choices=['randomcomb', 'bss', 'bipalindrome'],
                         help='Dataset to be trained on.')
     # Model params
-    parser.add_argument('--model_type', type=str, default='biLSTM',
+    #parser.add_argument('--model_type', type=str, default='biLSTM',
+    parser.add_argument('--model_type', type=str, default='LSTM',
                         choices=['LSTM', 'biLSTM', 'GRU', 'peepLSTM'],
                         help='Model type: LSTM, biLSTM, GRU or peepLSTM')
-    parser.add_argument('--input_length', type=int, default=6,
+    #parser.add_argument('--input_length', type=int, default=6,
+    parser.add_argument('--input_length', type=int, default=10,
                         help='Length of an input sequence')
-    parser.add_argument('--input_dim', type=int, default=1,
+    #parser.add_argument('--input_dim', type=int, default=1,
+    parser.add_argument('--input_dim', type=int, default=12,
                         help='Dimensionality of input sequence')
-    parser.add_argument('--num_classes', type=int, default=1,
+    parser.add_argument('--num_classes', type=int, default=2,
                         help='Dimensionality of output sequence')
     parser.add_argument('--num_hidden', type=int, default=256,
                         help='Number of hidden units in the model')
@@ -205,14 +242,16 @@ if __name__ == "__main__":
     # Training params
     parser.add_argument('--batch_size', type=int, default=256,
                         help='Number of examples to process in a batch')
-    parser.add_argument('--learning_rate', type=float, default=0.001,
+    #parser.add_argument('--learning_rate', type=float, default=0.001,
+    parser.add_argument('--learning_rate', type=float, default=0.0001,
                         help='Learning rate')
     parser.add_argument('--train_steps', type=int, default=3000,
                         help='Number of training steps')
     parser.add_argument('--max_norm', type=float, default=10.0)
 
     # Misc params
-    parser.add_argument('--device', type=str, default="cuda:0",
+    #parser.add_argument('--device', type=str, default="cuda:0",
+    parser.add_argument('--device', type=str, default="cpu",
                         help="Training device 'cpu' or 'cuda:0'")
     parser.add_argument('--gpu_mem_frac', type=float, default=0.5,
                         help='Fraction of GPU memory to allocate')
