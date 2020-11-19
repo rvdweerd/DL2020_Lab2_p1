@@ -76,6 +76,7 @@ class LSTM(nn.Module):
         self.C = torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
         self.h=torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
         for t in range(self.seq_length):
+            #resetMatrix = torch.diag((x_in[:,t]>0).type(torch.FloatTensor)).to(self.device)
             sig = torch.nn.Sigmoid()
             tanh = torch.nn.Tanh()
             f=sig(torch.matmul(x[:,t,:],self.Wfx) + torch.matmul(self.h,self.Wfh) + self.bf)
