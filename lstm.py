@@ -29,6 +29,8 @@ class LSTM(nn.Module):
         self.C=torch.zeros(hidden_dim)
         self.h=torch.zeros(hidden_dim)
 
+        self.embedding = torch.nn.Embedding(num_classes+2,input_dim,padding_idx=0)
+
         self.Wfx = nn.Parameter(torch.ones(input_dim,hidden_dim),requires_grad=True)
         nn.init.kaiming_normal_(self.Wfx, mode='fan_out', nonlinearity='sigmoid')
         #self.Wfx.requires_grad=True
@@ -66,6 +68,7 @@ class LSTM(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         ####################### 
+        x=self.embedding(x.squeeze(2).type(torch.LongTensor))
         for s in range(self.batch_size):
             self.C = torch.zeros(self.hidden_dim)
             self.h=torch.zeros(self.hidden_dim)

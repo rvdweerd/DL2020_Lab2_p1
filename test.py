@@ -26,7 +26,7 @@ else:
     device = torch.device('cpu')
 print('device used:',device)
 
-embedding = torch.nn.Embedding(N_CLASSES+2,INPUT_DIM,padding_idx=0)
+#embedding = torch.nn.Embedding(N_CLASSES+2,INPUT_DIM,padding_idx=0)
 bp_dataset = BinaryPalindromeDataset(2)
 data_loader = torch.utils.data.DataLoader(bp_dataset, batch_size=BATCH_SIZE)
 
@@ -37,8 +37,9 @@ print('Number of trainable parameters: ',count_parameters(lstm))
 torch.autograd.set_detect_anomaly(True)
 for i in range(1000):
     data_inputs, data_labels = next(iter(data_loader))
-    x_emb=embedding((data_inputs.squeeze(2)).type(torch.LongTensor))
-    pred = lstm(x_emb)
+    #x_emb=embedding((data_inputs.squeeze(2)).type(torch.LongTensor))
+    #pred = lstm(x_emb)
+    pred = lstm(data_inputs)
     loss=loss_module(pred,data_labels.float())
     optimizer.zero_grad()
     if i==0:
@@ -53,8 +54,9 @@ for i in range(1000):
             correct=0
             for k in range(100):
                 x,t=next(iter(data_loader))
-                x_e = embedding(x.squeeze(2).type(torch.LongTensor))
-                pred=lstm(x_e)
+                #x_e = embedding(x.squeeze(2).type(torch.LongTensor))
+                #pred=lstm(x_e)
+                pred=lstm(x)
                 if (pred>0 and t==1) or (pred<0 and t==0):
                     correct+=1
             print('accuracy',correct/100)
