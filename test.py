@@ -1,5 +1,5 @@
 from datasets import BinaryPalindromeDataset
-
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from lstm import LSTM
@@ -11,7 +11,7 @@ def count_parameters(model):
 #import torch.utils.data as data
 N_PALIN = 2
 seq_len = N_PALIN*4+1
-BATCH_SIZE = 1
+BATCH_SIZE = 32
 N_CLASSES=1 # just binary classifier
 INPUT_DIM=10
 HIDDEN_DIM=256
@@ -31,11 +31,13 @@ bp_dataset = BinaryPalindromeDataset(2)
 data_loader = torch.utils.data.DataLoader(bp_dataset, batch_size=BATCH_SIZE)
 
 lstm = LSTM(seq_len,INPUT_DIM,HIDDEN_DIM,N_CLASSES,BATCH_SIZE,device)
-loss_module = torch.nn.BCEWithLogitsLoss()
+loss_module = torch.nn.BCEWithLogitsLoss(reduction='mean')
 optimizer = torch.optim.Adam(lstm.parameters(),lr=LEARNING_RATE)
 print('Number of trainable parameters: ',count_parameters(lstm))
 torch.autograd.set_detect_anomaly(True)
-for i in range(1000):
+acc_plt=[]
+loss_plt=[]
+for i in range(100):
     data_inputs, data_labels = next(iter(data_loader))
     #x_emb=embedding((data_inputs.squeeze(2)).type(torch.LongTensor))
     #pred = lstm(x_emb)
@@ -47,20 +49,26 @@ for i in range(1000):
     else:
         loss.backward()
     optimizer.step()
-
+    loss_plt.append(loss)
     if i%10 == 0:
         lstm.eval()
         with torch.no_grad():
             correct=0
-            for k in range(100):
+            total=0
+            for k in range(1):
                 x,t=next(iter(data_loader))
                 #x_e = embedding(x.squeeze(2).type(torch.LongTensor))
                 #pred=lstm(x_e)
                 pred=lstm(x)
-                if (pred>0 and t==1) or (pred<0 and t==0):
-                    correct+=1
-            print('accuracy',correct/100)
-
+                correct += ((pred>0)==t).sum().item()
+                total += t.size(0)
         lstm.train()
+        acc_plt.append(correct/total)
+        print('accuracy',acc_plt[-1])
 
     print('step ',i,'loss=',loss)
+
+plt.plot(loss_plt)
+plt.show()
+plt.plot(acc_plt)
+plt.show()

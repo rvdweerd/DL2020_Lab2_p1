@@ -26,8 +26,8 @@ class LSTM(nn.Module):
         self.batch_size = batch_size
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
-        self.C=torch.zeros(hidden_dim)
-        self.h=torch.zeros(hidden_dim)
+        self.C=torch.zeros(batch_size,hidden_dim)
+        self.h=torch.zeros(batch_size,hidden_dim)
 
         self.embedding = torch.nn.Embedding(num_classes+2,input_dim,padding_idx=0)
 
@@ -69,20 +69,20 @@ class LSTM(nn.Module):
         # PUT YOUR CODE HERE  #
         ####################### 
         x=self.embedding(x.squeeze(2).type(torch.LongTensor))
-        for s in range(self.batch_size):
-            self.C = torch.zeros(self.hidden_dim)
-            self.h=torch.zeros(self.hidden_dim)
-            for t in range(self.seq_length):
-                sig = torch.nn.Sigmoid()
-                tanh = torch.nn.Tanh()
-                f=sig(torch.matmul(x[s,t,:],self.Wfx) + torch.matmul(self.h,self.Wfh) + self.bf)
-                i=sig(torch.matmul(x[s,t,:],self.Wix) + torch.matmul(self.h,self.Wih) + self.bi)
-                g=sig(torch.matmul(x[s,t,:],self.Wgx) + torch.matmul(self.h,self.Wgh) + self.bg)
-                o=sig(torch.matmul(x[s,t,:],self.Wox) + torch.matmul(self.h,self.Woh) + self.bo)
-                self.C = g*i + self.C*f
-                self.h = o*tanh(self.C)
+        
+        self.C = torch.zeros(self.batch_size,self.hidden_dim)
+        self.h=torch.zeros(self.batch_size,self.hidden_dim)
+        for t in range(self.seq_length):
+            sig = torch.nn.Sigmoid()
+            tanh = torch.nn.Tanh()
+            f=sig(torch.matmul(x[:,t,:],self.Wfx) + torch.matmul(self.h,self.Wfh) + self.bf)
+            i=sig(torch.matmul(x[:,t,:],self.Wix) + torch.matmul(self.h,self.Wih) + self.bi)
+            g=sig(torch.matmul(x[:,t,:],self.Wgx) + torch.matmul(self.h,self.Wgh) + self.bg)
+            o=sig(torch.matmul(x[:,t,:],self.Wox) + torch.matmul(self.h,self.Woh) + self.bo)
+            self.C = g*i + self.C*f
+            self.h = o*tanh(self.C)
         y=torch.matmul(self.h,self.Wph)+self.bp
-        return y
+        return y.squeeze()
         ########################
         # END OF YOUR CODE    #
         #######################
