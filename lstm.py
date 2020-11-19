@@ -58,9 +58,9 @@ class LSTM(nn.Module):
         nn.init.kaiming_normal_(self.Woh, mode='fan_out', nonlinearity='sigmoid')
         self.bo = nn.Parameter(torch.zeros(hidden_dim),requires_grad=True)
 
-        self.Wph = nn.Parameter(torch.ones(hidden_dim,num_classes),requires_grad=True)
+        self.Wph = nn.Parameter(torch.ones(hidden_dim,1),requires_grad=True)
         nn.init.kaiming_normal_(self.Wph, mode='fan_out', nonlinearity='sigmoid')
-        self.bp = nn.Parameter(torch.zeros(num_classes),requires_grad=True)
+        self.bp = nn.Parameter(torch.zeros(num_classes-1),requires_grad=True)
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -76,7 +76,7 @@ class LSTM(nn.Module):
         self.C = torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
         self.h=torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
         for t in range(self.seq_length):
-            #resetMatrix = torch.diag((x_in[:,t]>0).type(torch.FloatTensor)).to(self.device)
+            resetMatrix = torch.diag((x_in[:,t]>0).type(torch.FloatTensor)).to(self.device)
             sig = torch.nn.Sigmoid()
             tanh = torch.nn.Tanh()
             f=sig(torch.matmul(x[:,t,:],self.Wfx) + torch.matmul(self.h,self.Wfh) + self.bf)
@@ -84,10 +84,13 @@ class LSTM(nn.Module):
             g=sig(torch.matmul(x[:,t,:],self.Wgx) + torch.matmul(self.h,self.Wgh) + self.bg)
             o=sig(torch.matmul(x[:,t,:],self.Wox) + torch.matmul(self.h,self.Woh) + self.bo)
             self.C = g*i + self.C*f
-            #self.C = torch.diag((x_in[:,t]>0).type(torch.FloatTensor)) @self.C # Reset state vector to zero if sequence hasn't started yet (padding symbol)
+            self.C = resetMatrix @self.C # Reset state vector to zero if sequence hasn't started yet (padding symbol)
             self.h = o*tanh(self.C)
         y=torch.matmul(self.h,self.Wph)+self.bp
         return y.squeeze()
+
+    def numTrainableParameters(self):
+        return sum(p.numel() for p in self.parameters() if p.requires_grad)
         ########################
         # END OF YOUR CODE    #
         #######################

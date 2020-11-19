@@ -14,7 +14,7 @@ def count_parameters(model):
 N_PALIN = 10
 seq_len = N_PALIN*4+1
 #BATCH_SIZE = 256
-N_CLASSES=1 # just binary classifier
+N_CLASSES=2 # just binary classifier
 INPUT_DIM=max(seq_len//2,5)
 HIDDEN_DIM=256
 #LEARNING_RATE=1e-3
@@ -32,13 +32,24 @@ print('device used:',device)
 
 bp_dataset = BinaryPalindromeDataset(N_PALIN)
 
-learning_rates=[0.001, 0.0001]
-batch_sizes=[8,128,256]
+learning_rates=[0.0001]
+batch_sizes=[256]
 for LEARNING_RATE in learning_rates:
     for BATCH_SIZE in batch_sizes:
         writer=SummaryWriter(f'runs/LSTM/MiniBatchSize {BATCH_SIZE}')
         data_loader = torch.utils.data.DataLoader(bp_dataset, batch_size=BATCH_SIZE)
         lstm = LSTM(seq_len,INPUT_DIM,HIDDEN_DIM,N_CLASSES,BATCH_SIZE,device)
+        print('LSTM init:')
+        print('input_len',seq_len)
+        print('input_dim',INPUT_DIM)
+        print('num_hidden',HIDDEN_DIM)
+        print('num_classes',N_CLASSES)#config.num_classes)
+        print('batch_size',BATCH_SIZE)
+        print('device',device)
+
+
+
+
         lstm.to(device)
         loss_module = torch.nn.BCEWithLogitsLoss(reduction='mean')
         loss_module.to(device)
@@ -47,7 +58,7 @@ for LEARNING_RATE in learning_rates:
         acc_plt=[]
         loss_plt=[]
 
-        for i in range(1000):
+        for i in range(3000):
             data_inputs, data_labels = next(iter(data_loader))
             if device.type=='cuda':
                 data_inputs=data_inputs.to(device=device)
@@ -76,7 +87,7 @@ for LEARNING_RATE in learning_rates:
             writer.add_scalar('Accuracy',acc,global_step=i)
 
             #writer.add_scalar('Training acc')
-            if i%200 == 0:
+            if i%100 == 0:
                 lstm.eval()
                 with torch.no_grad():
                     correct=0
