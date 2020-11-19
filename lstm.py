@@ -28,6 +28,7 @@ class LSTM(nn.Module):
         self.hidden_dim = hidden_dim
         self.C=torch.zeros(batch_size,hidden_dim)
         self.h=torch.zeros(batch_size,hidden_dim)
+        self.device=device
 
         self.embedding = torch.nn.Embedding(num_classes+2,input_dim,padding_idx=0)
 
@@ -67,11 +68,14 @@ class LSTM(nn.Module):
     def forward(self, x):
         ########################
         # PUT YOUR CODE HERE  #
-        ####################### 
-        x=self.embedding(x.squeeze(2).type(torch.LongTensor))
+        #######################
+        test =  x.squeeze(2).type(torch.LongTensor).to(self.device)
+        #test=test.cuda()
+        x=self.embedding(test)
+        #x=self.embedding(x.squeeze(2).type(torch.LongTensor))
         
-        self.C = torch.zeros(self.batch_size,self.hidden_dim)
-        self.h=torch.zeros(self.batch_size,self.hidden_dim)
+        self.C = torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
+        self.h=torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
         for t in range(self.seq_length):
             sig = torch.nn.Sigmoid()
             tanh = torch.nn.Tanh()
