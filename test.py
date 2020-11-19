@@ -11,11 +11,11 @@ def count_parameters(model):
 
 
 #import torch.utils.data as data
-N_PALIN = 2
+N_PALIN = 2#10
 seq_len = N_PALIN*4+1
 #BATCH_SIZE = 256
 N_CLASSES=1 # just binary classifier
-INPUT_DIM=10
+INPUT_DIM=3
 HIDDEN_DIM=256
 LEARNING_RATE=1e-4
 
@@ -30,9 +30,9 @@ else:
     device = torch.device('cpu')
 print('device used:',device)
 
-bp_dataset = BinaryPalindromeDataset(2)
+bp_dataset = BinaryPalindromeDataset(N_PALIN)
 
-batch_sizes=[8,256]
+batch_sizes=[256]
 for BATCH_SIZE in batch_sizes:
     writer=SummaryWriter(f'runs/LSTM/MiniBatchSize {BATCH_SIZE}')
     data_loader = torch.utils.data.DataLoader(bp_dataset, batch_size=BATCH_SIZE)
@@ -45,7 +45,7 @@ for BATCH_SIZE in batch_sizes:
     acc_plt=[]
     loss_plt=[]
 
-    for i in range(50):
+    for i in range(300):
         data_inputs, data_labels = next(iter(data_loader))
         if device.type=='cuda':
             data_inputs=data_inputs.to(device=device)

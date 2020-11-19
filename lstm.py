@@ -69,10 +69,8 @@ class LSTM(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
-        test =  x.squeeze(2).type(torch.LongTensor).to(self.device)
-        #test=test.cuda()
-        x=self.embedding(test)
-        #x=self.embedding(x.squeeze(2).type(torch.LongTensor))
+        x_in =  x.squeeze(2).type(torch.LongTensor).to(self.device)
+        x=self.embedding(x_in)
         
         self.C = torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
         self.h=torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
@@ -84,6 +82,7 @@ class LSTM(nn.Module):
             g=sig(torch.matmul(x[:,t,:],self.Wgx) + torch.matmul(self.h,self.Wgh) + self.bg)
             o=sig(torch.matmul(x[:,t,:],self.Wox) + torch.matmul(self.h,self.Woh) + self.bo)
             self.C = g*i + self.C*f
+            self.C = torch.diag((x_in[:,t]>0).type(torch.FloatTensor)) @self.C # Reset state vector to zero if sequence hasn't started yet (padding symbol)
             self.h = o*tanh(self.C)
         y=torch.matmul(self.h,self.Wph)+self.bp
         return y.squeeze()
