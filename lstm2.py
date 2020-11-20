@@ -61,7 +61,8 @@ class LSTM(nn.Module):
         nn.init.kaiming_normal_(self.Wph, mode='fan_out', nonlinearity='sigmoid')
         
         self.lsm=nn.LogSoftmax(dim=1)
-        
+        self.sig = torch.nn.Sigmoid()
+        self.tanh = torch.nn.Tanh()
         ########################
         # END OF YOUR CODE    #
         #######################
@@ -77,23 +78,20 @@ class LSTM(nn.Module):
         self.C = torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
         self.h=torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
         for t in range(self.seq_length):
-            sig = torch.nn.Sigmoid()
-            tanh = torch.nn.Tanh()
-            f=sig(torch.matmul(x[:,t,:],self.Wfx) + torch.matmul(self.h,self.Wfh) + self.bf)
-            i=sig(torch.matmul(x[:,t,:],self.Wix) + torch.matmul(self.h,self.Wih) + self.bi)
-            g=sig(torch.matmul(x[:,t,:],self.Wgx) + torch.matmul(self.h,self.Wgh) + self.bg)
-            o=sig(torch.matmul(x[:,t,:],self.Wox) + torch.matmul(self.h,self.Woh) + self.bo)
+            
+            f=self.sig(torch.matmul(x[:,t,:],self.Wfx) + torch.matmul(self.h,self.Wfh) + self.bf)
+            i=self.sig(torch.matmul(x[:,t,:],self.Wix) + torch.matmul(self.h,self.Wih) + self.bi)
+            g=self.sig(torch.matmul(x[:,t,:],self.Wgx) + torch.matmul(self.h,self.Wgh) + self.bg)
+            o=self.sig(torch.matmul(x[:,t,:],self.Wox) + torch.matmul(self.h,self.Woh) + self.bo)
             self.C = g*i + self.C*f
             
             # Check whether sequences in batch at this timestep have a token as entry, set state to zero if so
             resetVec=(x_in[:,t]>0).type(torch.FloatTensor).to(self.device) 
             self.C = torch.einsum('ij,i->ij',self.C,resetVec)
-            self.h = o*tanh(self.C)
-        y=torch.matmul(self.h,self.Wph)+self.bp
+            self.h = o*self.tanh(self.C)
+        p=torch.matmul(self.h,self.Wph)+self.bp
         
-        y_hat = self.lsm(y)
-        #y_hat = logsm(y)
-        
+        y_hat = self.lsm(p)
         return y_hat
         
 

@@ -36,6 +36,7 @@ from gru import GRU
 from peep_lstm import peepLSTM
 
 import numpy as np
+from utils import *
 
 # You may want to look into tensorboardX for logging
 # from tensorboardX import SummaryWriter
@@ -121,6 +122,10 @@ def train(config):
     loss_function = torch.nn.NLLLoss()
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
 
+    # For plotting
+    acc_plt=[]
+    loss_plt=[]
+    convergenceCounter=0 # to stop after consecutive accuracies of 1.0 on training
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
 
         # Only for time measurement of step through network
@@ -155,6 +160,8 @@ def train(config):
         accuracy = correct / log_probs.size(0)
 
         # print(predictions[0, ...], batch_targets[0, ...])
+        acc_plt.append(accuracy)
+        loss_plt.append(loss)
 
         # Just for time measurement
         t2 = time.time()
@@ -171,12 +178,36 @@ def train(config):
                     ))
 
         # Check if training is finished
-        if step == config.train_steps:
-            # If you receive a PyTorch data-loader error, check this bug report
+        if accuracy>0.999:
+            convergenceCounter+=1
+        if step == config.train_steps or convergenceCounter>100:            # If you receive a PyTorch data-loader error, check this bug report
             # https://github.com/pytorch/pytorch/pull/9655
             break
-
+    
+    # test on new data:
+    model.eval()
+    with torch.no_grad():
+        correct=0
+        total=0
+        test_loss=0
+        for step, (x, t) in enumerate(data_loader):
+            numBatchesTestEval=10
+            if device.type=='cuda':
+                x=x.to(device)
+                t=t.to(device)
+            log_probs=model(x)
+            predictions = torch.argmax(log_probs, dim=1)
+            correct += (predictions == t).sum().item()
+            total += log_probs.size(0)
+            test_loss += loss_function(log_probs,t)/numBatchesTestEval
+            if step==numBatchesTestEval:
+                break
+        test_accuracy=correct/total
+        model.train()
     print('Done training.')
+    print('Accuracy on testset of 5000 examples:',test_accuracy)
+    print('Avg. loss on testset:',test_loss)
+    pltLossAcc(loss_plt,acc_plt,config)
     ###########################################################################
     ###########################################################################
 
