@@ -139,8 +139,8 @@ def train(config):
     acc_plt=[]
     loss_plt=[]
     
+    convergenceCounter=0
     for step, (batch_inputs, batch_targets) in enumerate(data_loader):
-
         # Only for time measurement of step through network
         t1 = time.time()
 
@@ -200,7 +200,9 @@ def train(config):
                     ))
 
         # Check if training is finished
-        if step == config.train_steps:
+        if accuracy>0.999:
+            convergenceCounter+=1
+        if step == config.train_steps or convergenceCounter>100:
             # If you receive a PyTorch data-loader error, check this bug report
             # https://github.com/pytorch/pytorch/pull/9655
             break
@@ -211,7 +213,7 @@ def train(config):
         with torch.no_grad():
             correct=0
             total=0
-            numBatchesTestEval=5
+            numBatchesTestEval=10
             test_loss=0
             for step, (x, t) in enumerate(data_loader):
             #for k in range(numBatchesTestEval):
@@ -250,6 +252,7 @@ def train(config):
     plt.show()
     
     plt.plot(acc_plt)
+
     plt.show()
     writer.add_hparams({'lr':config.learning_rate,'bsize':config.batch_size},{'accuracy':test_accuracy,'loss':test_loss})
     print('Done training.')
@@ -273,7 +276,7 @@ if __name__ == "__main__":
                         choices=['LSTM', 'biLSTM', 'GRU', 'peepLSTM'],
                         help='Model type: LSTM, biLSTM, GRU or peepLSTM')
     #parser.add_argument('--input_length', type=int, default=6,
-    parser.add_argument('--input_length', type=int, default=2,#10,
+    parser.add_argument('--input_length', type=int, default=10,
                         help='Length of an input sequence')
     #parser.add_argument('--input_dim', type=int, default=1,
     parser.add_argument('--input_dim', type=int, default=20,
@@ -289,7 +292,7 @@ if __name__ == "__main__":
     #parser.add_argument('--learning_rate', type=float, default=0.001,
     parser.add_argument('--learning_rate', type=float, default=0.0001,
                         help='Learning rate')
-    parser.add_argument('--train_steps', type=int, default=400,#3000,
+    parser.add_argument('--train_steps', type=int, default=3000,
                         help='Number of training steps')
     parser.add_argument('--max_norm', type=float, default=10.0)
 
