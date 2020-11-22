@@ -71,12 +71,16 @@ class LSTM(nn.Module):
         ########################
         # PUT YOUR CODE HERE  #
         #######################
+        
+        # Transform input vector into embedded space
         x_in =  x.squeeze(2).type(torch.LongTensor).to(self.device)
-        #x_in =  x.type(torch.LongTensor).to(self.device)
         x=self.embedding(x_in)
         
+        # Initialize the LSTM (set state and output vectors to zero)
         self.C = torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
         self.h=torch.zeros(self.batch_size,self.hidden_dim).to(self.device)
+        
+        # Loop over the sequence ('time steps')
         for t in range(self.seq_length):
             
             f=self.sig(torch.matmul(x[:,t,:],self.Wfx) + torch.matmul(self.h,self.Wfh) + self.bf)
@@ -89,9 +93,11 @@ class LSTM(nn.Module):
             resetVec=(x_in[:,t]>0).type(torch.FloatTensor).to(self.device) 
             self.C = torch.einsum('ij,i->ij',self.C,resetVec)
             self.h = o*self.tanh(self.C)
-        p=torch.matmul(self.h,self.Wph)+self.bp
         
-        y_hat = self.lsm(p)
+        # Linear layer to transform to output dimension (predictions of class probs)
+        p=torch.matmul(self.h,self.Wph)+self.bp
+        y_hat = self.lsm(p) # log softmax
+        
         return y_hat
         
 

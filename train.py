@@ -202,8 +202,8 @@ def train(config):
             test_loss += loss_function(log_probs,t)/numBatchesTestEval
             if step==numBatchesTestEval:
                 break
-        test_accuracy=correct/total
-        model.train()
+    test_accuracy=correct/total
+    model.train()
     print('Done training.')
     print('Accuracy on testset of 5000 examples:',test_accuracy)
     print('Avg. loss on testset:',test_loss)
