@@ -45,9 +45,14 @@ from utils import *
 
 
 def train(config):
-    np.random.seed(0)
-    torch.manual_seed(0)
-
+    seed=config.seed
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        #torch.backends.cudnn.deterministic=True
+        #torch.backends.cudnn.benchmark=False
 
     # Initialize the device which to run the model on
     device = torch.device(config.device)
@@ -242,6 +247,8 @@ if __name__ == "__main__":
     parser.add_argument('--train_steps', type=int, default=3000,
                         help='Number of training steps')
     parser.add_argument('--max_norm', type=float, default=10.0)
+    parser.add_argument('--seed', type=int, default=42,
+                        help='Seed')
 
     # Misc params
     parser.add_argument('--device', type=str, default="cuda:0",
