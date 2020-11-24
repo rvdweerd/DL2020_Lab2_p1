@@ -89,7 +89,7 @@ class LSTM(nn.Module):
             o=self.sig(torch.matmul(x[:,t,:],self.Wox) + torch.matmul(self.h,self.Woh) + self.bo)
             self.C = g*i + self.C*f
             
-            # Check whether sequences in batch at this timestep have a token as entry, set state to zero if so
+            # Check whether sequences in batch at this timestep have a padding symbol (0) as entry, set state to zero if so
             resetVec=(x_in[:,t]>0).type(torch.FloatTensor).to(self.device) 
             self.C = torch.einsum('ij,i->ij',self.C,resetVec)
             self.h = o*self.tanh(self.C)

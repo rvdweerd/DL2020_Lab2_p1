@@ -195,8 +195,8 @@ def train(config):
         correct=0
         total=0
         test_loss=0
+        numBatchesTestEval=10
         for step, (x, t) in enumerate(data_loader):
-            numBatchesTestEval=10
             if device.type=='cuda':
                 x=x.to(device)
                 t=t.to(device)
