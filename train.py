@@ -123,6 +123,7 @@ def train(config):
             config.batch_size, device
         ).to(device)
 
+    model.numTrainableParameters()
     # Setup the loss and optimizer
     loss_function = torch.nn.NLLLoss()
     optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
@@ -251,8 +252,10 @@ if __name__ == "__main__":
                         help='Seed')
 
     # Misc params
-    parser.add_argument('--device', type=str, default="cuda:0",
-                        help="Training device 'cpu' or 'cuda:0'")
+    #parser.add_argument('--device', type=str, default="cuda:0",
+    #                    help="Training device 'cpu' or 'cuda:0'")
+    parser.add_argument('--device', type=str, default=("cpu" if not torch.cuda.is_available() else "cuda:0"),
+                        help="Device to run the model on.")
     parser.add_argument('--gpu_mem_frac', type=float, default=0.5,
                         help='Fraction of GPU memory to allocate')
     parser.add_argument('--log_device_placement', type=bool, default=False,

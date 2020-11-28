@@ -11,7 +11,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import numpy as np
 
 class peepLSTM(nn.Module):
 
@@ -91,11 +91,15 @@ class peepLSTM(nn.Module):
         
         y_hat = self.lsm(p)
         return y_hat
-        
-
+    
     def numTrainableParameters(self):
-        return sum(p.numel() for p in self.parameters() if p.requires_grad)
-
+        total = 0
+        for name, p in self.named_parameters():
+            total += np.prod(p.shape)
+            print("{:24s} {:12s} requires_grad={}".format(name, str(list(p.shape)), p.requires_grad))
+        print("\nTotal number of parameters: {}\n".format(total))
+        assert total == sum(p.numel() for p in self.parameters() if p.requires_grad)
+        return total
         ########################
         # END OF YOUR CODE    #
         #######################

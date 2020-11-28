@@ -9,7 +9,7 @@ from __future__ import print_function
 
 import torch
 import torch.nn as nn
-
+import numpy as np
 
 class LSTM(nn.Module):
 
@@ -97,12 +97,16 @@ class LSTM(nn.Module):
         # Linear layer to transform to output dimension (predictions of class probs)
         p=torch.matmul(self.h,self.Wph)+self.bp
         y_hat = self.lsm(p) # log softmax
-        
         return y_hat
-        
 
     def numTrainableParameters(self):
-        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+        total = 0
+        for name, p in self.named_parameters():
+            total += np.prod(p.shape)
+            print("{:24s} {:12s} requires_grad={}".format(name, str(list(p.shape)), p.requires_grad))
+        print("\nTotal number of parameters: {}\n".format(total))
+        assert total == sum(p.numel() for p in self.parameters() if p.requires_grad)
+        return total
         ########################
         # END OF YOUR CODE    #
         #######################
